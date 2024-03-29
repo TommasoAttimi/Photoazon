@@ -4,24 +4,36 @@ const app = express();
 const port = 3000;
 
 import {
-  getSingle,
-  deleteSingle,
-  updateSingle,
-  getAll,
-  create,
+  getSinglePhoto,
+  deleteSinglePhoto,
+  updateSinglePhoto,
+  getAllPhotos,
+  createPhoto,
 } from "./routes-photos.js";
 
-import { addPhotoToAlbum } from "./routes-albums.js";
+import {
+  addPhotoToAlbum,
+  getSingleAlbum,
+  deleteSingleAlbum,
+  updateSingleAlbum,
+  getAllAlbums,
+  createAlbum,
+} from "./routes-albums.js";
 
 app.use(bodyParser.json());
 
-app.post("/photos", create);
-app.get("/photos/:id", getSingle);
-app.get("/photos", getAll);
-app.put("/photos/:id", updateSingle);
-app.delete("/photos/:id", deleteSingle);
+app.post("/photos", createPhoto);
+app.get("/photos", getAllPhotos);
+app.get("/photos/:id", getSinglePhoto);
+app.put("/photos/:id", updateSinglePhoto);
+app.delete("/photos/:id", deleteSinglePhoto);
 
 app.post("/albums/:albumId/photos/:photoId", addPhotoToAlbum);
+app.post("/albums", createAlbum);
+app.get("/albums", getAllAlbums);
+app.get("/albums/:id", getSingleAlbum);
+app.put("/albums/:id", updateSingleAlbum);
+app.delete("/albums/:id", deleteSingleAlbum);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

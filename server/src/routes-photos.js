@@ -1,12 +1,6 @@
-import {
-  connect,
-  close,
-  createPhoto,
-  updatePhoto,
-  deletePhoto,
-} from "./mongodb-connection.js";
+import { connect, createPh, updatePh, deletePh } from "./mongodb-connection.js";
 
-export const getAll = async (req, res) => {
+export const getAllPhotos = async (req, res) => {
   let foundPhotos = [];
   let db = await connect();
   let keys = Object.keys(req.query);
@@ -36,7 +30,7 @@ export const getAll = async (req, res) => {
   res.json({ status: "ok", photos: foundPhotos });
 };
 
-export const getSingle = async (req, res) => {
+export const getSinglePhoto = async (req, res) => {
   let db = await connect();
   let photo = db.photos.find((photo) => photo.id == req.params.id);
   if (photo) {
@@ -46,8 +40,8 @@ export const getSingle = async (req, res) => {
   }
 };
 
-export const deleteSingle = async (req, res) => {
-  let [success, data] = await deletePhoto(req.params.id);
+export const deleteSinglePhoto = async (req, res) => {
+  let [success, data] = await deletePh(req.params.id);
   if (success) {
     res.status(200).json({ status: "ok", photo: data });
   } else {
@@ -55,10 +49,10 @@ export const deleteSingle = async (req, res) => {
   }
 };
 
-export const updateSingle = async (req, res) => {
+export const updateSinglePhoto = async (req, res) => {
   let newPhotoData = req.body;
   if (photoIsValid(newPhotoData)) {
-    let [success, data] = await updatePhoto(newphotoData);
+    let [success, data] = await updatePh(newphotoData);
     if (success) {
       res.json({ status: "ok", data: data });
     } else {
@@ -69,9 +63,9 @@ export const updateSingle = async (req, res) => {
   }
 };
 
-export const create = async (req, res) => {
+export const createPhoto = async (req, res) => {
   if (photoIsValid(req.body)) {
-    let [success, data] = await createPhoto(req.body);
+    let [success, data] = await createPh(req.body);
     if (success) {
       res.status(201).json({ status: "ok", id: data });
     } else {

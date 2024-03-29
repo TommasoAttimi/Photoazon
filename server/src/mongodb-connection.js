@@ -10,7 +10,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-export async function createPhoto(photo) {
+export async function createPh(photo) {
   try {
     await connect();
     const result = await client
@@ -25,7 +25,7 @@ export async function createPhoto(photo) {
   }
 }
 
-export async function updatePhoto(photo) {
+export async function updatePh(photo) {
   try {
     await connect();
     const result = await client
@@ -40,7 +40,7 @@ export async function updatePhoto(photo) {
   }
 }
 
-export async function deletePhoto(id) {
+export async function deletePh(id) {
   try {
     await connect();
     const result = await client
@@ -64,7 +64,7 @@ export async function close() {
   await client.close();
 }
 
-export async function createAlbum(album) {
+export async function createAlb(album) {
   try {
     await connect();
     const result = await client
@@ -79,7 +79,7 @@ export async function createAlbum(album) {
   }
 }
 
-export async function updateAlbum(album) {
+export async function updateAlb(album) {
   try {
     await connect();
     const result = await client
@@ -94,7 +94,7 @@ export async function updateAlbum(album) {
   }
 }
 
-export async function deleteAlbum(id) {
+export async function deleteAlb(id) {
   try {
     await connect();
     const result = await client

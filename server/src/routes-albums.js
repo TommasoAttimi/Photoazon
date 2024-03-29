@@ -6,9 +6,9 @@ import {
 } from "./db.js";
 import {
   connect,
-  createAlbum,
-  updateAlbum,
-  deleteAlbum,
+  createAlb,
+  updateAlb,
+  deleteAlb,
 } from "./mongodb-connection.js";
 
 export const addPhotoToAlbum = async (req, res) => {
@@ -36,7 +36,7 @@ export const addPhotoToAlbum = async (req, res) => {
   res.json({ status: "ok" });
 };
 
-export const getAll = async (req, res) => {
+export const getAllAlbums = async (req, res) => {
   let foundAlbums = [];
   let db = await connect();
   let keys = Object.keys(req.query);
@@ -67,7 +67,7 @@ export const getAll = async (req, res) => {
   res.json({ status: "ok", albums: foundAlbums });
 };
 
-export const getSingle = async (req, res) => {
+export const getSingleAlbum = async (req, res) => {
   let db = await connect();
   let album = db.albums.find((album) => album.id == req.params.id);
   if (album) {
@@ -77,8 +77,8 @@ export const getSingle = async (req, res) => {
   }
 };
 
-export const deleteSingle = async (req, res) => {
-  let [success, data] = await deleteAlbum(req.params.id);
+export const deleteSingleAlbum = async (req, res) => {
+  let [success, data] = await deleteAlb(req.params.id);
   if (success) {
     res.status(200).json({ status: "ok", album: data });
   } else {
@@ -86,10 +86,10 @@ export const deleteSingle = async (req, res) => {
   }
 };
 
-export const updateSingle = async (req, res) => {
+export const updateSingleAlbum = async (req, res) => {
   let newAlbumData = req.body;
   if (albumIsValid(newAlbumData)) {
-    let [success, data] = await updateAlbum(newAlbumData);
+    let [success, data] = await updateAlb(newAlbumData);
     if (success) {
       res.json({ status: "ok", data: data });
     } else {
@@ -100,9 +100,9 @@ export const updateSingle = async (req, res) => {
   }
 };
 
-export const create = async (req, res) => {
+export const createAlbum = async (req, res) => {
   if (albumIsValid(req.body)) {
-    let [success, data] = await createAlbum(req.body);
+    let [success, data] = await createAlb(req.body);
     if (success) {
       res.status(201).json({ status: "ok", id: data });
     } else {

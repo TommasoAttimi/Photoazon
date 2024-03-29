@@ -1,47 +1,75 @@
 import { connect } from "./mongodb-connection.js";
 
-export async function exists(collection, id) {
-  let db = await connect();
-  let foundElements = db[collection].filter((element) => element.id == id);
-  return foundElements.length > 0;
+export async function exists(id) {
+  try {
+    const db = await connect();
+    const collection = db.collection("albums");
+    const document = await collection.findOne({ _id: id });
+    return document !== null;
+  } catch (error) {
+    console.error(`Error checking existence in collection`, error);
+    throw error;
+  }
 }
 
 export async function getAlbumForPhoto(photoId) {
-  let db = await connect();
-  let albums = db.albums;
-  for (let i = 0; i < albums.length; i++) {
-    let photos = albums[i].photos;
-    if (photos.indexOf(photoId) > -1) {
-      return albums[i];
-    }
+  try {
+    const db = await connect();
+    const albumsCollection = db.collection("albums");
+    const album = await albumsCollection.findOne({ photos: photoId });
+    return album;
+  } catch (error) {
+    console.error("Error retrieving album for photo", error);
+    throw error;
   }
-  return null;
 }
 
 export async function saveAlbums(albums) {
-  let db = await connect();
-  db.albums = albums;
-  await fs.writeFile(JSON.stringify(db));
+  try {
+    const db = await connect();
+    const result = await db.collection("albums").replaceOne({}, { albums });
+    console.log(`${result.modifiedCount} document updated`);
+  } catch (error) {
+    console.error("Error saving albums", error);
+    throw error;
+  }
 }
 
 export async function removePhotoFromAlbum(album, photoId) {
-  let db = await connect();
-  let albums = db.albums;
-  let otherPhotos = album.photos.filter((pho) => pho != photoId);
+  try {
+    const db = await connect();
+    const albumsCollection = db.collection("albums");
+    const otherPhotos = album.photos.filter((pho) => pho !== photoId);
+    const result = await albumsCollection.updateOne(
+      { _id: album._id },
+      { $set: { photos: otherPhotos } }
+    );
 
-  for (let i = 0; i < albums.length; i++) {
-    if (albums[i].id == album.id) {
-      albums[i].photos = otherPhotos;
-    }
+    console.log(`${result.modifiedCount} document(s) updated`);
+  } catch (error) {
+    console.error("Error removing photo from album", error);
+    throw error;
   }
-
-  await saveAlbums(albums);
 }
 
 export async function addPhotoToAlbumAndSave(albumId, photoId) {
-  let db = await connect();
-  let albums = db.albums;
-  let album = albums.find((alb) => alb.id == albumId);
-  album.photos.push(photoId);
-  saveAlbums(albums);
+  try {
+    const db = await connect();
+    const albumsCollection = db.collection("albums");
+    const album = await albumsCollection.findOne({ _id: albumId });
+    if (!album) {
+      throw new Error(`Album with ID ${albumId} not found`);
+    }
+    album.photos.push(photoId);
+
+    const result = await albumsCollection.updateOne(
+      { _id: albumId },
+      { $set: { photos: album.photos } }
+    );
+
+    console.log(`${result.modifiedCount} document updated`);
+  } catch (error) {
+    console.error("Error adding photo to album and saving", error);
+    throw error;
+  }
 }
