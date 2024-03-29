@@ -1,77 +1,93 @@
 import { connect, createPh, updatePh, deletePh } from "./mongodb-connection.js";
 
 export const getAllPhotos = async (req, res) => {
-  let foundPhotos = [];
-  let db = await connect();
-  let keys = Object.keys(req.query);
-  if (keys.length == 0) {
-    res.json({ status: "ok", photos: db.photos });
-    return;
-  }
-  for (let j = 0; j < db.photos.length; j++) {
-    let photo = db.photos[j];
-    let count = 0;
-    for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
-      if (photo[key] == req.query[key]) {
-        count++;
-      }
+  try {
+    const db = await connect();
+    const photosCollection = db.collection("photos");
+    let keys = Object.keys(req.query);
+
+    if (keys.length === 0) {
+      const photos = await photosCollection.find({}).toArray();
+      res.json({ status: "ok", photos: photos });
+      return;
     }
-    if (req.query.choice == "or") {
-      if (count > 0) {
-        foundPhotos.push(photo);
-      }
-    } else {
-      if (count == keys.length) {
-        foundPhotos.push(photo);
-      }
-    }
+  } catch (error) {
+    console.error("Error fetching photos:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
-  res.json({ status: "ok", photos: foundPhotos });
 };
 
 export const getSinglePhoto = async (req, res) => {
-  let db = await connect();
-  let photo = db.photos.find((photo) => photo.id == req.params.id);
-  if (photo) {
-    res.json({ status: "ok", photo: photo });
-  } else {
-    res.status(404).json({ status: "error" });
+  try {
+    const db = await connect();
+    const photosCollection = db.collection("photos");
+    const photo = await photosCollection.findOne({ id: req.params.id });
+
+    if (photo) {
+      res.json({ status: "ok", photo: photo });
+    } else {
+      res.status(404).json({ status: "error", msg: "Photo not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching single photo:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };
 
 export const deleteSinglePhoto = async (req, res) => {
-  let [success, data] = await deletePh(req.params.id);
-  if (success) {
-    res.status(200).json({ status: "ok", photo: data });
-  } else {
-    res.status(400).json({ status: "error" });
+  try {
+    const [success, data] = await deletePh(req.params.id);
+    if (success) {
+      res.status(200).json({ status: "ok", photo: data });
+    } else {
+      res.status(404).json({ status: "error", msg: "Photo not found" });
+    }
+  } catch (error) {
+    console.error("Error deleting photo:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };
 
 export const updateSinglePhoto = async (req, res) => {
-  let newPhotoData = req.body;
-  if (photoIsValid(newPhotoData)) {
-    let [success, data] = await updatePh(newphotoData);
-    if (success) {
-      res.json({ status: "ok", data: data });
+  try {
+    const newPhotoData = req.body;
+    if (photoIsValid(newPhotoData)) {
+      const [success, data] = await updatePh(req.params.id, newPhotoData);
+      if (success) {
+        res.json({ status: "ok", data: data });
+      } else {
+        res.status(404).json({ status: "error", msg: "Photo not found" });
+      }
     } else {
-      res.status(400).json({ status: "error" });
+      res
+        .status(400)
+        .json({ status: "error", msg: "Invalid photo attributes" });
     }
-  } else {
-    res.status(400).json({ status: "error" });
+  } catch (error) {
+    console.error("Error updating photo:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };
 
 export const createPhoto = async (req, res) => {
-  if (photoIsValid(req.body)) {
-    let [success, data] = await createPh(req.body);
-    if (success) {
-      res.status(201).json({ status: "ok", id: data });
+  try {
+    const photoData = req.body;
+    if (photoIsValid(photoData)) {
+      const [success, data] = await createPh(photoData);
+      if (success) {
+        res.status(201).json({ status: "ok", id: data });
+      } else {
+        res
+          .status(500)
+          .json({ status: "error", msg: "Failed to create photo" });
+      }
     } else {
-      res.status(409).json({ status: "error", msg: data.errmsg });
+      res
+        .status(400)
+        .json({ status: "error", msg: "Invalid photo attributes" });
     }
-  } else {
-    res.status(400).json({ status: "error", msg: "Invalid photo attributes" });
+  } catch (error) {
+    console.error("Error creating photo:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };

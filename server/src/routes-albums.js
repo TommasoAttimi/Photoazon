@@ -68,47 +68,73 @@ export const getAllAlbums = async (req, res) => {
 };
 
 export const getSingleAlbum = async (req, res) => {
-  let db = await connect();
-  let album = db.albums.find((album) => album.id == req.params.id);
-  if (album) {
-    res.json({ status: "ok", album: album });
-  } else {
-    res.status(404).json({ status: "error" });
+  try {
+    const db = await connect();
+    const albumsCollection = db.collection("albums");
+    const album = await albumsCollection.findOne({ id: req.params.id });
+
+    if (album) {
+      res.json({ status: "ok", album: album });
+    } else {
+      res.status(404).json({ status: "error", msg: "Album not found" });
+    }
+  } catch (error) {
+    console.error("Error fetching single album:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };
 
 export const deleteSingleAlbum = async (req, res) => {
-  let [success, data] = await deleteAlb(req.params.id);
-  if (success) {
-    res.status(200).json({ status: "ok", album: data });
-  } else {
-    res.status(400).json({ status: "error" });
+  try {
+    const [success, data] = await deleteAlb(req.params.id);
+    if (success) {
+      res.status(200).json({ status: "ok", album: data });
+    } else {
+      res.status(404).json({ status: "error", msg: "Album not found" });
+    }
+  } catch (error) {
+    console.error("Error deleting album:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };
 
 export const updateSingleAlbum = async (req, res) => {
-  let newAlbumData = req.body;
-  if (albumIsValid(newAlbumData)) {
-    let [success, data] = await updateAlb(newAlbumData);
-    if (success) {
-      res.json({ status: "ok", data: data });
+  try {
+    const newAlbumData = req.body;
+    if (albumIsValid(newAlbumData)) {
+      const [success, data] = await updateAlb(req.params.id, newAlbumData);
+      if (success) {
+        res.json({ status: "ok", data: data });
+      } else {
+        res.status(404).json({ status: "error", msg: "Album not found" });
+      }
     } else {
-      res.status(400).json({ status: "error" });
+      res
+        .status(400)
+        .json({ status: "error", msg: "Invalid album attributes" });
     }
-  } else {
-    res.status(400).json({ status: "error" });
+  } catch (error) {
+    console.error("Error updating album:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };
 
 export const createAlbum = async (req, res) => {
-  if (albumIsValid(req.body)) {
-    let [success, data] = await createAlb(req.body);
-    if (success) {
-      res.status(201).json({ status: "ok", id: data });
+  try {
+    if (albumIsValid(req.body)) {
+      const [success, data] = await createAlb(req.body);
+      if (success) {
+        res.status(201).json({ status: "ok", id: data });
+      } else {
+        res.status(409).json({ status: "error", msg: data.errmsg });
+      }
     } else {
-      res.status(409).json({ status: "error", msg: data.errmsg });
+      res
+        .status(400)
+        .json({ status: "error", msg: "Invalid album attributes" });
     }
-  } else {
-    res.status(400).json({ status: "error", msg: "Invalid album attributes" });
+  } catch (error) {
+    console.error("Error creating album:", error);
+    res.status(500).json({ status: "error", msg: "Internal server error" });
   }
 };

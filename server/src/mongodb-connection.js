@@ -57,7 +57,14 @@ export async function deletePh(id) {
   }
 }
 export async function connect() {
-  await client.connect();
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB");
+    return client.db("photoazon");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+    throw error;
+  }
 }
 
 export async function close() {
